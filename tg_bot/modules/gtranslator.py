@@ -1,20 +1,19 @@
 from gpytranslate import Translator
-from telegram.ext import CommandHandler, CallbackContext
+from telegram.ext import CallbackContext
 from telegram import (
-    Message,
-    Chat,
-    User,
-    ParseMode,
     Update,
+    ParseMode,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-from tg_bot import dispatcher, kp
+from tg_bot import kp
 from pyrogram import filters
 from pyrogram.types import Message
-from tg_bot.modules.disable import DisableAbleCommandHandler
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 
+
+
+__mod_name__ = "Translator"
 
 
 trans = Translator()

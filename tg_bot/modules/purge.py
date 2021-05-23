@@ -2,8 +2,8 @@ import time
 from telethon import events
 from telethon.errors.rpcerrorlist import MessageDeleteForbiddenError
 
-from tg_bot import client
-from tg_bot.modules.helper_funcs.telethn.chatstatus import can_delete_messages, user_is_admin
+from tg_bot import telethn
+from tg_bot.modules.helper_funcs.telethn.chatstatus import user_is_admin, can_delete_messages
 
 
 async def purge_messages(event):
@@ -22,18 +22,17 @@ async def purge_messages(event):
         await event.reply("Can't seem to purge the message")
         return
 
-    reply_msg = await event.get_reply_message()
-    if not reply_msg:
+    reply_message = await event.get_reply_message()
+    if not reply_message:
         await event.reply(
             "Reply to a message to select where to start purging from.")
         return
 
     count = 0
     messages = []
-    message_id = reply_msg.id
-    delete_to = event.message.id
     reason = event.text.split(" ", 1)
     chat = await event.get_input_chat()
+    message_id, delete_to = reply_message.id, event.message.id
 
     try:
         await event.client.delete_messages(event.chat_id, event.message.id)
@@ -93,10 +92,10 @@ def get_help(chat):
 
 
 PURGE_HANDLER = purge_messages, events.NewMessage(pattern="^[!/]purge ?(.*)")
-DEL_HANDLER = delete_messages, events.NewMessage(pattern="^[!/]del")
+DEL_HANDLER = delete_messages, events.NewMessage(pattern="^[!/]del$")
 
-client.add_event_handler(*PURGE_HANDLER)
-client.add_event_handler(*DEL_HANDLER)
+telethn.add_event_handler(*PURGE_HANDLER)
+telethn.add_event_handler(*DEL_HANDLER)
 
 __mod_name__ = "Purges"
 __command_list__ = ["purge", "del"]

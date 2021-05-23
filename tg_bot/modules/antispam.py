@@ -1,8 +1,8 @@
 import html
 import time
-import requests
-from datetime import datetime
 from io import BytesIO
+from datetime import datetime
+
 from tg_bot.modules.sql.users_sql import get_user_com_chats
 import tg_bot.modules.sql.antispam_sql as sql
 from tg_bot import (
@@ -15,7 +15,7 @@ from tg_bot import (
     WHITELIST_USERS,
     sw,
     dispatcher,
-    log
+    log,
 )
 from tg_bot.modules.helper_funcs.chat_status import (
     is_user_admin,
@@ -23,17 +23,17 @@ from tg_bot.modules.helper_funcs.chat_status import (
     user_admin,
 )
 from tg_bot.modules.helper_funcs.extraction import extract_user, extract_user_and_text
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
+from tg_bot.modules.helper_funcs.chat_status import dev_plus
 from tg_bot.modules.helper_funcs.misc import send_to_list
 from tg_bot.modules.sql.users_sql import get_all_chats
-from telegram import ParseMode, Update
+
 from telegram.error import BadRequest, TelegramError
 from telegram.ext import CallbackContext, Filters
 from telegram.utils.helpers import mention_html
-from tg_bot.modules.helper_funcs.chat_status import dev_plus
-from spamprotection.sync import SPBClient
-from spamprotection.errors import HostDownError
+from telegram import ParseMode, Update
+
 from spamwatch.errors import SpamWatchError, Error, UnauthorizedError, NotFoundError, Forbidden, TooManyRequests
-from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
 
 GBAN_ENFORCE_GROUP = -1
 
@@ -67,34 +67,8 @@ UNGBAN_ERRORS = {
 
 
 
-
-SPB_MODE = True
-client = SPBClient()
-
-@dev_plus
-@kigcmd(command="spb")
-def spbtoggle(update: Update, context: CallbackContext):
-    global SPB_MODE
-    args = update.effective_message.text.split(None, 1)
-    message = update.effective_message
-    print(SPB_MODE)
-    if len(args) > 1:
-        if args[1] in ("yes", "on"):
-            SPB_MODE = True
-            message.reply_animation("https://telegra.ph/file/a49e7bef1cc664eabcb26.mp4", caption="SpamProtection API bans are now enabled.\nAll hail @Intellivoid.")
-        elif args[1] in ("no", "off"):
-            SPB_MODE = False
-            message.reply_text("SpamProtection API bans are now disabled.")
-    else:
-        if SPB_MODE:
-            message.reply_text("SpamProtection API bans are currently enabled.")
-        else:
-            message.reply_text("SpamProtection API bans are currenty disabled.")
-
-
-
+@kigcmd(command="gban", can_disable=False)
 @support_plus
-@kigcmd(command="gban")
 def gban(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
     message = update.effective_message
@@ -296,9 +270,8 @@ def gban(update: Update, context: CallbackContext):
     except:
         pass  # bot probably blocked by user
 
-
+@kigcmd(command="ungban", can_disable=False)
 @support_plus
-@kigcmd(command="ungban")
 def ungban(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
     message = update.effective_message
@@ -409,9 +382,8 @@ def ungban(update: Update, context: CallbackContext):
     else:
         message.reply_text(f"Person has been un-gbanned. Took {ungban_time} sec")
 
-
+@kigcmd(command="gbanlist", can_disable=False)
 @support_plus
-@kigcmd(command="gbanlist")
 def gbanlist(update: Update, context: CallbackContext):
     banned_users = sql.get_gban_list()
 
@@ -437,29 +409,7 @@ def gbanlist(update: Update, context: CallbackContext):
 
 
 def check_and_ban(update, user_id, should_message=True):
-
     chat = update.effective_chat  # type: Optional[Chat]
-
-    apst = requests.get(f'https://api.intellivoid.net/spamprotection/v1/lookup?query={update.effective_user.id}')
-    api_status = apst.status_code
-    if SPB_MODE and api_status == 200:
-        try:
-            status = client.raw_output(int(user_id))
-            try:
-                bl_check = (status["results"]["attributes"]["is_blacklisted"])
-            except:
-                bl_check = False
-
-            if bl_check is True:
-                bl_res = (status["results"]["attributes"]["blacklist_reason"])
-                update.effective_chat.kick_member(user_id)
-                if should_message:
-                    update.effective_message.reply_text(
-                    f"This person was blacklisted on @SpamProtectionBot and has been removed!\nReason: <code>{bl_res}</code>",
-                    parse_mode=ParseMode.HTML,
-                )
-        except HostDownError:
-            log.warning("Spam Protection API is unreachable.")
 
     try:
         sw_ban = sw.get_ban(int(user_id))
@@ -518,9 +468,8 @@ def enforce_gban(update: Update, context: CallbackContext):
             if user and not is_user_admin(chat, user.id):
                 check_and_ban(update, user.id, should_message=False)
 
-
+@kigcmd(command="antispam", can_disable=False)
 @user_admin
-@kigcmd(command="antispam")
 def gbanstat(update: Update, context: CallbackContext):
     args = context.args
     if len(args) > 0:
@@ -574,15 +523,11 @@ def __user_info__(user_id):
     return text
 
 
+__mod_name__ = "AntiSpam"
+
 def __migrate__(old_chat_id, new_chat_id):
     sql.migrate_chat(old_chat_id, new_chat_id)
 
 
 def __chat_settings__(chat_id, user_id):
     return f"This chat is enforcing *gbans*: `{sql.does_chat_gban(chat_id)}`."
-
-
-from tg_bot.modules.language import gs
-
-__mod_name__ = 'AntiSpam'
-

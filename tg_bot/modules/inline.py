@@ -1,27 +1,24 @@
+import os
 import html
 import json
-from datetime import datetime
-from platform import python_version
-from typing import List
-from uuid import uuid4
-
 import requests
-from spamprotection.errors import HostDownError
-from spamprotection.sync import SPBClient
-from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent, Update, InlineKeyboardMarkup, \
-    InlineKeyboardButton
-from telegram import __version__
+from uuid import uuid4
+from typing import List
+from bs4 import BeautifulSoup
+
+from telegraph import upload_file
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 from telegram.utils.helpers import mention_html
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import ParseMode, InlineQueryResultArticle, InputTextMessageContent
 
+from tg_bot import log
 import tg_bot.modules.sql.users_sql as sql
-from tg_bot import sw, log
+from tg_bot.modules.users import get_user_id
 from tg_bot.modules.helper_funcs.misc import article
 from tg_bot.modules.helper_funcs.decorators import kiginline
 
-
-client = SPBClient()
 
 
 def remove_prefix(text, prefix):
@@ -34,6 +31,7 @@ def inlinequery(update: Update, _) -> None:
     """
     Main InlineQueryHandler callback.
     """
+
     query = update.inline_query.query
     user = update.effective_user
 
@@ -41,27 +39,52 @@ def inlinequery(update: Update, _) -> None:
     inline_help_dicts = [
         {
             "title": "Anime",
-            "description": "Search anime and manga on AniList.co",
-            "message_text": "Click the button below to search anime and manga on AniList.co",
-            "thumb_urL": "https://telegra.ph/file/c85e07b58f5b3158b529a.jpg",
+            "description": "Search Anime & Manga On AniList.co",
+            "message_text": "Search anime and manga on AniList.co",
+            "thumb_urL": "https://telegra.ph/file/a546976e6f3ebf21a131a.jpg",
             "keyboard": ".anime ",
         },
         {
+            "title": "Character",
+            "description": "Search Characters on AniList.co",
+            "message_text": "Search character on AniList.co",
+            "thumb_urL": "https://telegra.ph/file/a546976e6f3ebf21a131a.jpg",
+            "keyboard": ".char ",
+        },
+        {
             "title": "Account info",
-            "description": "Look up a Telegram account in Kigyo database",
-            "message_text": "Click the button below to look up a person in Kigyo database using their Telegram ID",
-            "thumb_urL": "https://telegra.ph/file/c85e07b58f5b3158b529a.jpg",
+            "description": "Look up a Telegram account in my database",
+            "message_text": "Look up a person in my database using their Telegram ID",
+            "thumb_urL": "https://telegra.ph/file/57d5522a9d8fa56e3be27.jpg",
             "keyboard": ".info ",
+        },
+        {
+            "title": "Stickers",
+            "description": "Search Any Telegram Sticker Packs on Combot.org",
+            "message_text": "Search stickers for given term on combot sticker catalogue",
+            "thumb_urL": "https://telegra.ph/file/8917d882b623b0c2a1012.jpg",
+            "keyboard": ".stickers ",
+        },
+        {
+            "title": "Applications",
+            "description": "Search Any Application on play.google.com",
+            "message_text": "Search Application On Playstore",
+            "thumb_urL": "https://telegra.ph/file/6b84acef0f4b6770940b5.jpg",
+            "keyboard": ".app ",
         },
     ]
 
     inline_funcs = {
         ".anime": media_query,
-        ".info": inlineinfo,
+        ".char": character_query,
+        ".info": info_query,
+        ".stickers": stickers_query,
+        ".app": app_query,
     }
 
     if (f := query.split(" ", 1)[0]) in inline_funcs:
         inline_funcs[f](remove_prefix(query, f).strip(), update, user)
+
     else:
         for ihelp in inline_help_dicts:
             results.append(
@@ -88,28 +111,39 @@ def inlinequery(update: Update, _) -> None:
         update.inline_query.answer(results, cache_time=5)
 
 
-def inlineinfo(query: str, update: Update, context: CallbackContext) -> None:
+def info_query(query: str, update: Update, context: CallbackContext) -> None:
     """Handle the inline query."""
     bot = context.bot
     query = update.inline_query.query
-    log.info(query)
-    user_id = update.effective_user.id
+    user = update.effective_user
 
     try:
-        search = query.split(" ", 1)[1]
+        search = str(query.split(" ", 1)[1])
     except IndexError:
-        search = user_id
+        search = str(user.id)
 
     try:
-        user = bot.get_chat(int(search))
+        if search.isdigit() or search.isnumeric():
+            user = bot.get_chat(int(search))
+        elif search.startswith("@"):
+            getuser = get_user_id(str(search))
+            if getuser:
+               user = bot.get_chat(int(getuser))
+            else:
+               user = bot.get_chat(str(search))
+        else:
+            user = bot.get_chat("@" + str(search))
     except (BadRequest, ValueError):
-        user = bot.get_chat(user_id)
+        user = bot.get_chat(user.id)
     chat = update.effective_chat
 
+    if os.path.isfile(f"inlineinfo{user.id}.jpg"):
+        os.remove(f"inlineinfo{user.id}.jpg")
+
     text = (
-        f"<b>• User Information:</b>\n"
-        f"∘ ID: <code>{user.id}</code>\n"
-        f"∘ First Name: {html.escape(user.first_name) if user.first_name is not None else '☠️ <code>Zombie</code> ☠️'}"
+        f"<b>• User Info:</b>\n"
+        f"\n∘ ID: <code>{user.id}</code>"
+        f"\n∘ First Name: {html.escape(user.first_name) or '☠️ <code>Demon</code> ☠️'}"
     )
 
     if user.last_name:
@@ -125,6 +159,17 @@ def inlineinfo(query: str, update: Update, context: CallbackContext) -> None:
     if int(same_chats) >= 1:
          text += f"\n∘ Mutual Chats: <code>{same_chats}</code>"
 
+    ispic = False
+    try:
+        profilepic = bot.get_user_profile_photos(user.id).photos[0][-1]
+        userpic = bot.get_file(profilepic["file_id"])
+        downloadpic = userpic.download(f"inlineinfo{user.id}.jpg")
+        uploadpic = upload_file(downloadpic)
+        os.remove(f"inlineinfo{user.id}.jpg")
+        ispic = True
+    # Incase user don't have profile pic
+    except IndexError:
+        ispic = False
 
 
 
@@ -139,17 +184,167 @@ def inlineinfo(query: str, update: Update, context: CallbackContext) -> None:
                ]
          )
 
-    results = [
-        InlineQueryResultArticle(
-            id=str(uuid4()),
-            title=f"User info of {html.escape(user.first_name)}",
-            input_message_content=InputTextMessageContent(text, parse_mode=ParseMode.HTML,
-                                                          disable_web_page_preview=True),
-            reply_markup=kb
-        ),
-    ]
+    if ispic:
+        try:
+            results = [
+              InlineQueryResultArticle(
+                    id=str(uuid4()),
+                    title=f"{user.first_name or search} {user.last_name or ''}",
+                    description=user.bio or "N/A",
+                    thumb_url=f"https://telegra.ph{uploadpic[0]}",
+                    input_message_content=InputTextMessageContent(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True),
+                    reply_markup=kb,
+              ),
+            ]
+        except:
+            results = [
+              InlineQueryResultArticle(
+                    id=str(uuid4()),
+                    title=f"{user.first_name or search} {user.last_name or ''}",
+                    description=user.bio or "N/A",
+                    input_message_content=InputTextMessageContent(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True),
+                    reply_markup=kb,
+              ),
+            ]
+    else:
+        results = [
+           InlineQueryResultArticle(
+              id=str(uuid4()),
+              title=f"{user.first_name or search} {user.last_name or ''}",
+              description=user.bio or "N/A",
+              input_message_content=InputTextMessageContent(text, parse_mode=ParseMode.HTML, disable_web_page_preview=True),
+              reply_markup=kb,
+           ),
+        ]
 
     update.inline_query.answer(results, cache_time=5)
+
+
+
+def stickers_query(query: str, update: Update, context: CallbackContext) -> None:
+    """Handle the inline sticker query."""
+
+    query = update.inline_query.query
+    user = update.effective_user
+
+    stickers: List = []
+    try:
+        try:
+            split = str(query.split(" ", 1)[1])
+        except IndexError:
+            return 
+
+        comboturl = f"https://combot.org/telegram/stickers?q={split}"
+        headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0"}
+        text = requests.get(comboturl, headers=headers).text
+
+        soup = BeautifulSoup(text, "lxml")
+        results = soup.findAll("a", {'class': "sticker-pack__btn"})
+        titles = soup.findAll("div", "sticker-pack__title")
+
+        Packs = {}
+        if results:
+            for result, title in zip(results, titles):
+                 link = result["href"]
+                 Packs[f"{link}"] = title
+
+            for packlink, title in Packs.items():
+                 kb = InlineKeyboardMarkup([[InlineKeyboardButton(text="Add Pack", url=packlink)], [InlineKeyboardButton(text="Search Again", switch_inline_query_current_chat=".stickers ")]])
+                 stickers.append(
+                     InlineQueryResultArticle(
+                            id=str(uuid4()),
+                            title=title.get_text() or split,
+                            input_message_content=InputTextMessageContent(f"Result Of <b>{split}</b>:", parse_mode=ParseMode.HTML, disable_web_page_preview=True),
+                            reply_markup=kb,
+                     )
+                 )
+
+    except Exception as e:
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(text="Search Again", switch_inline_query_current_chat=".stickers ")]])
+        stickers.append(
+            InlineQueryResultArticle(
+                id=str(uuid4()),
+                title=f"Sticker-Pack {split} not found",
+                input_message_content=InputTextMessageContent(f"Stickers {split} not found due to {e}", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True),
+                reply_markup=kb,
+            )
+        )
+
+    update.inline_query.answer(stickers, cache_time=5)
+
+
+def app_query(query: str, update: Update, context: CallbackContext) -> None:
+    """Handle the inline sticker query."""
+
+    query = update.inline_query.query
+    user = update.effective_user
+
+    application: List = []
+    try:
+        try:
+            split = str(query.split(" ", 1)[1])
+        except IndexError:
+            return
+
+        url = "https://play.google.com"
+        page = requests.get(f"{url}/store/search?q={split}&c=apps")
+        soup = BeautifulSoup(page.content, "lxml", from_encoding="utf-8")
+        results = soup.findAll("div", "ZmHEEd")
+
+        # Preparing Data
+        app_name = results[0].findNext(
+                        'div', 'Vpfmgd').findNext(
+                                   'div', 'WsMG1c nnK0zc').text
+
+        app_devs = results[0].findNext(
+                       'div', 'Vpfmgd').findNext(
+                                  'div', 'KoLSrc').text
+
+        app_dev_link = url + results[0].findNext(
+                                  'div', 'Vpfmgd').findNext(
+                                               'a', 'mnKHRc')['href']
+
+        app_rating = results[0].findNext(
+                          'div', 'Vpfmgd').findNext(
+                                     'div', 'pf5lIe').find('div')['aria-label']
+
+        app_link = url + results[0].findNext(
+                              'div', 'Vpfmgd').findNext(
+                                         'div', 'vU6FJ p63iDd').a['href']
+        app_icon = results[0].findNext(
+                        'div', 'Vpfmgd').findNext(
+                                   'div', 'uzcko').img['data-src']
+
+        # Structuring Data
+        data = (
+          f"• <b>{html.escape(app_name)}</b>\n"
+          f"\n∘ <b>Developer</b>: <a href='{html.escape(app_dev_link)}'>{html.escape(app_devs)}</a>"
+          f"\n∘ <b>Rating</b>: {html.escape(app_rating.replace('Rated ', '').replace(' out of ', '/').replace(' stars', '', 1).replace(' stars', '').replace('five', '5'))}" 
+        )
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(text="Playstore", url=app_link)], [InlineKeyboardButton(text="Search Again", switch_inline_query_current_chat=".app ")]])
+        application.append(
+               InlineQueryResultArticle(
+                       id=str(uuid4()),
+                       thumb_url=app_icon,
+                       title=app_name or split,
+                       input_message_content=InputTextMessageContent(data, parse_mode=ParseMode.HTML, disable_web_page_preview=True),
+                       reply_markup=kb,
+               )
+        )
+
+    except Exception as e:
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(text="Search Again", switch_inline_query_current_chat=".app ")]])
+        application.append(
+            InlineQueryResultArticle(
+                id=str(uuid4()),
+                title=f"App {split} not found",
+                input_message_content=InputTextMessageContent(f"App {split} not found due to {e}", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True),
+                reply_markup=kb,
+            )
+        )
+
+    update.inline_query.answer(application, cache_time=5)
+
 
 
 
@@ -237,7 +432,7 @@ def media_query(query: str, update: Update, context: CallbackContext) -> None:
                             url=aurl,
                         ),
                         InlineKeyboardButton(
-                            text="Search again",
+                            text="Search Again",
                             switch_inline_query_current_chat=".anilist ",
                         ),
 
@@ -292,3 +487,142 @@ def media_query(query: str, update: Update, context: CallbackContext) -> None:
         )
 
     update.inline_query.answer(results, cache_time=5)
+
+
+CHAR_QUERY = '''query ($query: String) {
+  Page (perPage: 15) {
+        characters (search: $query) {
+               id
+               name {
+                     first
+                     middle
+                     last
+                     full
+                     native
+                     alternative
+                     alternativeSpoiler
+               }
+               image {
+                        large
+                        medium
+               }
+               description
+               gender
+               dateOfBirth {
+                              year
+                              month
+                              day
+               }
+               age
+               siteUrl
+               favourites
+               modNotes
+        }
+    }
+}'''
+
+def character_query(query: str, update: Update, context: CallbackContext) -> None:
+    """
+    Handle character inline query.
+    """
+    results: List = []
+
+    try:
+        res = requests.post(
+                    'https://graphql.anilist.co',
+                    data=json.dumps({'query': CHAR_QUERY, 'variables': {'query': query}}),
+                    headers={'Content-Type': 'application/json', 'Accept': 'application/json'}
+              ).json()
+
+        data = res.get('data').get('Page').get('characters')
+        res = data
+        for data in res:
+            name = data.get('name').get('full') or query
+            nati_name = data.get('name').get('native') or 'N/A'
+            alt_name = data.get('name').get('alternative') or 'N/A'
+            favourite = data.get('favourites') or 'N/A'
+            char_age = data.get('age', 'N/A')
+            char_gender = data.get('gender') or 'N/A'
+            thumb_url_large = data.get('image').get('large') or "https://telegra.ph/file/cc83a0b7102ad1d7b1cb3.jpg"
+            site_url = data.get('siteUrl') or "https://anilist.co/characters"
+
+            try:
+                alt_name = data.get('name').get('alternative')
+                neme = ""
+                for altname in alt_name:
+                     neme += f"`{altname}` ,"
+                alt_name = f"{neme}"
+            except:
+                alt_name = data.get('name').get('alternative') or "N/A"
+
+            try:
+                des = data.get("description").replace("<br>", "").replace("</br>", "")
+                description = des.replace("<i>", "").replace("</i>", "") or "N/A"
+            except AttributeError:
+                description = data.get("description")
+
+            if len((str(description))) > 700:
+                description = description [0:700] + "....."
+
+            txt = f"*{name}* - (*{nati_name or 'N/A'}*)\n"
+            txt += f"\n*Alternative*: {alt_name or 'N/A'}"
+            txt += f"\n*Favourite*: {favourite or 'N/A'}"
+            txt += f"\n*Gender*: {char_gender or 'N/A'}"
+            txt += f"\n*Age*: {char_age or 'N/A'}"
+            txt += f"\n\n*Description*: \n{description or 'N/A'}"
+
+            kb = InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            text="More Information",
+                            url=site_url,
+                        ),
+
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="Search Again",
+                            switch_inline_query_current_chat=".char ",
+                        ),
+
+                    ],
+                ])
+
+            results.append(InlineQueryResultArticle(
+                    id=str(uuid4()),
+                    title=name or query,
+                    description=site_url or query,
+                    thumb_url=thumb_url_large or "https://telegra.ph/file/cc83a0b7102ad1d7b1cb3.jpg",
+                    input_message_content=InputTextMessageContent(txt, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=False),
+                    reply_markup=kb,
+                )
+            )
+    except Exception as e:
+        log.exception(e)
+        kb = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        text="Search Again",
+                        switch_inline_query_current_chat=".char ",
+                    ),
+
+                ],
+            ])
+
+        results.append(
+
+            InlineQueryResultArticle
+                (
+                id=str(uuid4()),
+                title=f"Character {query} not found",
+                thumb_url="https://telegra.ph/file/cc83a0b7102ad1d7b1cb3.jpg",
+                input_message_content=InputTextMessageContent(f"Character {query} not found due to {e}"),
+                reply_markup=kb
+            )
+
+        )
+
+    update.inline_query.answer(results, cache_time=5)
+

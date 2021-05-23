@@ -31,8 +31,8 @@ def _generate_sexy(entity, ping):
     return sexy_text
 
 
-@kp.on_message(filters.command(["cinfo"], prefixes=["/", "!"]))
-async def cinfo(client, message):
+@kp.on_message(filters.command(["ginfo"], prefixes=["/", "!"]))
+async def ginfo(client, message):
     entity = message.chat
     command = message.command
     command.pop(0)

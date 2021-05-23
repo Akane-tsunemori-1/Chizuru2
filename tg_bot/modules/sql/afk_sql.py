@@ -2,7 +2,7 @@ import time
 import threading
 
 from tg_bot.modules.sql import BASE, SESSION
-from sqlalchemy import Boolean, Column, Integer, UnicodeText, DateTime
+from sqlalchemy import Boolean, Column, Integer, UnicodeText
 
 
 class AFK(BASE):

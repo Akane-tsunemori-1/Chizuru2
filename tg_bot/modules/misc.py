@@ -2,12 +2,13 @@ import html
 import time
 import requests
 import datetime
+from bs4 import BeautifulSoup
 
 from telegram.error import BadRequest
 from telegram.utils.helpers import mention_html
 from telegram import Update, MessageEntity, ParseMode
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CommandHandler, Filters, CallbackContext
+from telegram.ext import Filters, CommandHandler, CallbackContext
 
 from tg_bot import (
     dispatcher,
@@ -26,7 +27,7 @@ import tg_bot.modules.sql.users_sql as sql
 from tg_bot.modules.language import gs
 from tg_bot.modules.helper_funcs.decorators import kigcmd
 import tg_bot.modules.helper_funcs.health as hp
-from tg_bot.modules.helper_funcs.get_time import get_time as get_readable_time
+from tg_bot.modules.helper_funcs.get_time import get_time
 
 @kigcmd(command='stat', filters=Filters.chat_type.group)
 def stat(update: Update, _):
@@ -176,11 +177,35 @@ def info(update: Update, context: CallbackContext):
         pass
 
 
-@user_admin
-@kigcmd(command='echo', pass_args=True, filters=Filters.chat_type.groups)
-def echo(update: Update, _):
-    args = update.effective_message.text.split(None, 1)
+@kigcmd(command="ud")
+def ud(update: Update, _):
     message = update.effective_message
+    text =  message.text.split(" ", 1)
+
+    if len(text) == 1:
+        message.reply_text(
+           "_Format:_ `/ud <anything>`",
+           parse_mode=ParseMode.MARKDOWN,
+        )
+        return
+
+    results = requests.get(
+        "https://api.urbandictionary.com/v0/define?term=" + text
+    ).json()
+
+    try:
+        results = f"*{text}*:\n\nResult*:* {results['list'][0]['definition']}\n\nExample*:* _{results['list'][0]['example']}_"
+    except:
+        results = "No results found!"
+
+    message.reply_text(results, parse_mode=ParseMode.MARKDOWN)
+
+
+@kigcmd(command='echo', pass_args=True, filters=Filters.chat_type.groups)
+@user_admin
+def echo(update: Update, _):
+    message = update.effective_message
+    args = message.text.split(" ", 1)
 
     if message.reply_to_message:
         message.reply_to_message.reply_text(args[1])
@@ -189,21 +214,35 @@ def echo(update: Update, _):
 
     message.delete()
 
-@kigcmd(command='markdownhelp', filters=Filters.chat_type.private)
-def markdown_help(update: Update, _):
-    chat = update.effective_chat
-    update.effective_message.reply_text((gs(chat.id, "markdown_help_text")), parse_mode=ParseMode.HTML)
+
+def send_formatting(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
-        "Try forwarding the following message to me, and you'll see!"
-    )
-    update.effective_message.reply_text(
-        "/save test This is a markdown test. _italics_, *bold*, `code`, "
-        "[URL](example.com) [button](buttonurl:github.com) "
-        "[button2](buttonurl://google.com:same)"
+        gs(update.effective_chat, "greetings_format_help").format(context.bot.first_name),
+        parse_mode=ParseMode.MARKDOWN,
+        disable_web_page_preview=True,
+        reply_markup=InlineKeyboardMarkup([
+               [InlineKeyboardButton(text="Markdown", callback_data="subhelp_wel_markdown"),
+               InlineKeyboardButton(text="Fillings", callback_data="subhelp_wel_fillings")],
+               [InlineKeyboardButton(text="Random Content", callback_data="subhelp_wel_random")],
+        ]),
     )
 
-@sudo_plus
+
+@kigcmd(command='formatting')
+def formatting(update: Update, context: CallbackContext):
+    chat = update.effective_chat
+
+    if chat.type == "private":
+        send_formatting(update, context)
+    else:
+        update.effective_message.reply_text(
+            "Contact me in PM for help!",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text="Help", url=f"t.me/{dispatcher.bot.username}?start=formatting")]]),
+        )
+
+
 @kigcmd(command='ping')
+@sudo_plus
 def ping(update: Update, _):
     msg = update.effective_message
     start_time = time.time()
@@ -211,8 +250,82 @@ def ping(update: Update, _):
     end_time = time.time()
     ping_time = round((end_time - start_time) * 1000, 3)
     message.edit_text(
-        "*Pong!!!*\n`{}ms`".format(ping_time), parse_mode=ParseMode.MARKDOWN
+        "*Pong!!!*\n`{}ms`".format(ping_time),
+        parse_mode=ParseMode.MARKDOWN,
     )
+
+
+@kigcmd(command='app')
+def app(update: Update, context: CallbackContext):
+    message = update.effective_message
+    try:
+        if message.text == '/app':
+            message.reply_text(
+               "Tell App Name :) \nFormat: `/app <name>`",
+               parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        url = "https://play.google.com"
+        search = message.reply_text("Searching In Play-Store....")
+        app_name = message.text[len('/app '):]
+
+        # Searching Data
+        remove_space = app_name.split(' ')
+        final_name = '+'.join(remove_space)
+        page = requests.get(
+           f"{url}/store/search?q={final_name}&c=apps"
+        )
+        soup = BeautifulSoup(page.content, "lxml", from_encoding="utf-8")
+        results = soup.findAll("div", "ZmHEEd")
+        print(results[0])
+
+        # Preparing Data
+        app_name = results[0].findNext(
+                        'div', 'Vpfmgd').findNext(
+                                   'div', 'WsMG1c nnK0zc').text
+
+        app_devs = results[0].findNext(
+                       'div', 'Vpfmgd').findNext(
+                                  'div', 'KoLSrc').text
+
+        app_dev_link = url + results[0].findNext(
+                                  'div', 'Vpfmgd').findNext(
+                                               'a', 'mnKHRc')['href']
+
+        app_rating = results[0].findNext(
+                          'div', 'Vpfmgd').findNext(
+                                     'div', 'pf5lIe').find('div')['aria-label']
+
+        app_link = url + results[0].findNext(
+                              'div', 'Vpfmgd').findNext(
+                                         'div', 'vU6FJ p63iDd').a['href']
+        app_icon = results[0].findNext(
+                        'div', 'Vpfmgd').findNext(
+                                   'div', 'uzcko').img['data-src']
+
+        # Structuring Data
+        data = (
+          f"<a href='{html.escape(app_icon)}'>•</a> <b>{html.escape(app_name)}</b>\n"
+          f"\n∘ <b>Developer</b>: <a href='{html.escape(app_dev_link)}'>{html.escape(app_devs)}</a>"
+          f"\n∘ <b>Rating</b>: {html.escape(app_rating.replace('Rated ', '').replace(' out of ', '/').replace(' stars', '', 1).replace(' stars', '').replace('five', '5'))}" 
+        )
+
+        context.bot.send_message(
+            update.effective_chat.id,
+            text=data,
+            parse_mode=ParseMode.HTML,
+            disable_web_page_preview=False,
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Link", url=app_link)]]),
+        )
+    except IndexError:
+        message.reply_text(
+            "No Result Found In Search. Are You Entered A Valid App Name?"
+        )
+    except Exception as err:
+        message.reply_text(err)
+    search.delete()
+
 
 
 def get_help(chat):

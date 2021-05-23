@@ -26,6 +26,7 @@ from telegram.ext import (
 from telegram.ext.dispatcher import DispatcherHandlerStop
 from telegram.utils.helpers import escape_markdown
 from tg_bot import (
+    RentalBot,
     dispatcher,
     updater,
     TOKEN,
@@ -160,10 +161,10 @@ def start(update: Update, context: CallbackContext):
         if len(args) >= 1:
             if args[0].lower() == "help":
                 send_help(update.effective_chat.id, (gs(chat.id, "pm_help_text")))
-            elif args[0].lower() in ["markdownhelp", "markdown"]:
-                IMPORTED["misc"].markdown_help(update)
-            elif args[0].lower() == "nations":
-                IMPORTED["nations"].send_nations(update)
+
+            elif args[0].lower() in ["formatting", "formattings"]:
+                IMPORTED["misc"].send_formatting(update, context)
+
             elif args[0].lower().startswith("stngs_"):
                 match = re.match("stngs_(.*)", args[0].lower())
                 chat = dispatcher.bot.getChat(match.group(1))
@@ -175,6 +176,7 @@ def start(update: Update, context: CallbackContext):
 
             elif args[0][1:].isdigit() and "rules" in IMPORTED:
                 IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
+
 
         else:
             first_name = update.effective_user.first_name
@@ -340,7 +342,6 @@ def about_callback(update: Update, context: CallbackContext):
                 parse_mode=ParseMode.MARKDOWN,
                 timeout=60, 
             )
-        query.answer("Welcome Back!")
         
     elif query.data == "aboutmanu_howto":
         query.message.edit_text(
@@ -355,19 +356,6 @@ def about_callback(update: Update, context: CallbackContext):
             ]),
         )
         query.answer("How To Use")
-
-    elif query.data == "aboutmanu_credit":
-        query.message.edit_text(
-            text=f"*{dispatcher.bot.first_name} Is A Powerful Bot For Managing Groups With Additional Features.*"
-                 f"\n\nFork Of [Marie](https://github.com/PaulSonOfLars/tgbot)."
-                 f"\n\n{dispatcher.bot.first_name}'s Licensed Under The GNU _(General Public License v3.0)_"
-                 f"\n\nHere Is The [Source Code](t.me/{SUPPORT_CHAT})."
-                 f"\n\nIf Any Suggestions About {dispatcher.bot.first_name}, \nLet Us Know At @{SUPPORT_CHAT}.",
-            parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True,
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text="Back", callback_data="aboutmanu_tac")]]),
-        )
-        query.answer("Credits")
 
     elif query.data == "aboutmanu_permis":
         query.message.edit_text(
@@ -419,7 +407,6 @@ def about_callback(update: Update, context: CallbackContext):
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
-                      InlineKeyboardButton(text="Credits", callback_data="aboutmanu_credit"),
                       InlineKeyboardButton(text="Back", callback_data="aboutmanu_")
                     ] 
                 ]
@@ -444,7 +431,7 @@ def get_help(update: Update, context: CallbackContext):
     if chat.type != chat.PRIVATE:
 
         update.effective_message.reply_text(
-            "Contact me in PM to get the list of possible commands.",
+            "Contact me in PM for help!",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
@@ -473,6 +460,9 @@ def get_help(update: Update, context: CallbackContext):
                 [[InlineKeyboardButton(text="Back", callback_data="help_back")]]
             ),
         )
+
+    elif len(args) >= 2 and args[1].lower() in ["formatting", "formattings"]:
+          IMPORTED["misc"].formatting(update, context)
 
     else:
         send_help(chat.id, (gs(chat.id, "pm_help_text")))
@@ -698,6 +688,9 @@ def main():
 
     else:
         log.info(f"Using long polling. | BOT: [@{dispatcher.bot.username}]")
+        RentalBot.bot_id = dispatcher.bot.id
+        RentalBot.bot_username = dispatcher.bot.username
+        RentalBot.bot_name = dispatcher.bot.first_name
         updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True)
     if len(argv) not in (1, 3, 4):
         telethn.disconnect()

@@ -26,12 +26,12 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 from tg_bot.modules.helper_funcs.admin_rights import user_can_changeinfo
  
 
+@kigcmd(command="fullpromote", pass_args=True)
 @connection_status
 @bot_admin
 @can_promote
 @user_admin
 @loggable
-@kigcmd(command="fullpromote", pass_args=True)
 def promote(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -134,12 +134,12 @@ def promote(update: Update, context: CallbackContext) -> str:
     return log_message
 
 
+@kigcmd(command="promote", pass_args=True, can_disable=False)
 @connection_status
 @bot_admin
 @can_promote
 @user_admin
 @loggable
-@kigcmd(command="promote", pass_args=True, can_disable=False)
 def promote(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -242,12 +242,12 @@ def promote(update: Update, context: CallbackContext) -> str:
     return log_message
 
 
+@kigcmd(command="demote", can_disable=False)
 @connection_status
 @bot_admin
 @can_promote
 @user_admin
 @loggable
-@kigcmd(command="demote", can_disable=False)
 def demote(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -331,18 +331,18 @@ def demote(update: Update, context: CallbackContext) -> str:
         return
 
 
-@user_admin
 @kigcmd(command=["admincache", "reload"], can_disable=False)
+@user_admin
 def refresh_admin(update, _):
     ADMIN_CACHE.pop(update.effective_chat.id)
     update.effective_message.reply_text("Admins cache refreshed!")
 
 
+@kigcmd(command="title", can_disable=False)
 @connection_status
 @bot_admin
 @can_promote
 @user_admin
-@kigcmd(command="title", can_disable=False)
 def set_title(update: Update, context: CallbackContext):
     bot = context.bot
     args = context.args
@@ -403,11 +403,11 @@ def set_title(update: Update, context: CallbackContext):
     )
 
 
+@kigcmd(command="pin", can_disable=False)
 @bot_admin
 @can_pin
 @user_admin
 @loggable
-@kigcmd(command="pin", can_disable=False)
 def pin(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     args = context.args
@@ -445,11 +445,11 @@ def pin(update: Update, context: CallbackContext) -> str:
         return log_message
 
 
+@kigcmd(command="unpin", can_disable=False)
 @bot_admin
 @can_pin
 @user_admin
 @loggable
-@kigcmd(command="unpin", can_disable=False)
 def unpin(update: Update, context: CallbackContext) -> str:
     bot = context.bot
     chat = update.effective_chat
@@ -472,10 +472,10 @@ def unpin(update: Update, context: CallbackContext) -> str:
     return log_message
 
 
+@kigcmd(command="invitelink")
 @bot_admin
 @user_admin
 @connection_status
-@kigcmd(command="invitelink", can_disable=False)
 def invite(update: Update, context: CallbackContext):
     bot = context.bot
     chat = update.effective_chat
@@ -497,9 +497,9 @@ def invite(update: Update, context: CallbackContext):
         )
 
 
+@kigcmd(command="setgtitle")
 @bot_admin
 @user_admin
-@kigcmd(command="setgtitle", can_disable=False)
 def chattitle(update, context):
     chat = update.effective_chat
     user = update.effective_user
@@ -526,9 +526,9 @@ def chattitle(update, context):
         return
 
 
+@kigcmd(command="delgpic")
 @bot_admin
 @user_admin
-@kigcmd(command="delgpic", can_disable=False)
 def delchatpic(update, context):
     chat = update.effective_chat
     user = update.effective_user
@@ -545,9 +545,9 @@ def delchatpic(update, context):
         return
 
 
+@kigcmd(command="setgpic")
 @bot_admin
 @user_admin
-@kigcmd(command="setgpic", can_disable=False)
 def chatpic(update: Update, context: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
@@ -582,9 +582,9 @@ def chatpic(update: Update, context: CallbackContext):
         message.reply_text("Reply to some photo or file to set new chat pic!")
 
 
+@kigcmd(command="setsticker")
 @bot_admin
 @user_admin
-@kigcmd(command="setsticker", can_disable=False)
 def gstickerset(update, context):
     chat = update.effective_chat
     user = update.effective_user
@@ -614,9 +614,9 @@ def gstickerset(update, context):
         message.reply_text("You need to reply to some sticker to set chat sticker set!")
 
 
+@kigcmd(command=["setdescription", "setdesc"])
 @bot_admin
 @user_admin
-@kigcmd(command=["setdescription", "setdesc"], can_disable=False)
 def set_desc(update, context):
     chat = update.effective_chat
     user = update.effective_user
@@ -710,7 +710,7 @@ def admim_button(update: Update, context: CallbackContext):
             ADMIN_CACHE.pop(update.effective_chat.id)
         except:
             pass
-        query.answer("Admin Cache Refreshed!")
+        query.answer("Admin Cache Refreshed!", show_alert=True)
         return
 
     elif query_match == "admim_promote":
@@ -822,3 +822,5 @@ def get_help(chat):
     return gs(chat, "admin_help")
 
 __mod_name__ = "Admin"
+
+__commands__ = ["fullpromote", "invitelink", "setgtitle", "delgpic", "setgpic", "setsticker", "setdescription", "setdesc"]

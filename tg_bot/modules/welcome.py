@@ -3,18 +3,17 @@ import random
 import re
 import time
 from functools import partial
+from contextlib import suppress
 from io import BytesIO
 import tg_bot.modules.sql.welcome_sql as sql
 from tg_bot import (
-    DEV_USERS,
+    sw,
     log,
     OWNER_ID,
-    SUDO_USERS,
-    SUPPORT_USERS,
-    SARDEGNA_USERS,
-    WHITELIST_USERS,
-    sw,
+    DEV_USERS,
     dispatcher,
+    JOIN_LOGGER,
+    ALLOW_CHATS,
 )
 from tg_bot.modules.helper_funcs.chat_status import (
     is_user_ban_protected,
@@ -168,6 +167,15 @@ def new_member(update: Update, context: CallbackContext):
         welcome_bool = True
         media_wel = False
 
+        if new_mem.id == bot.id and not ALLOW_CHATS and user.id not in DEV_USERS:
+            with suppress(BadRequest):
+                bot.send_message(chat.id, f"You Can't Rent {bot.first_name}, Groups are disabled for me!")
+            bot.leave_chat(update.effective_chat.id)
+            return
+
+        if is_user_gbanned(new_mem.id):
+            return
+
         if sw != None:
             sw_ban = sw.get_ban(new_mem.id)
             if sw_ban:
@@ -205,41 +213,34 @@ def new_member(update: Update, context: CallbackContext):
                 )
                 continue
 
-            # Welcome Sudos
-            elif new_mem.id in SUDO_USERS:
-                update.effective_message.reply_text(
-                    "Huh! A Royal Nation just joined! Stay Alert!",
-                    reply_to_message_id=reply,
-                )
-                continue
-
-            # Welcome Support
-            elif new_mem.id in SUPPORT_USERS:
-                update.effective_message.reply_text(
-                    "Huh! Someone with a Sakura Nation level just joined!",
-                    reply_to_message_id=reply,
-                )
-                continue
-
-            # Welcome Whitelisted
-            elif new_mem.id in SARDEGNA_USERS:
-                update.effective_message.reply_text(
-                    "Oof! A Sadegna Nation just joined!", reply_to_message_id=reply
-                )
-                continue
-
-            # Welcome SARDEGNA_USERS
-            elif new_mem.id in WHITELIST_USERS:
-                update.effective_message.reply_text(
-                    "Oof! A Neptuia Nation just joined!", reply_to_message_id=reply
-                )
-                continue
-
             # Welcome yourself
             elif new_mem.id == bot.id:
+                try: 
+                    CHAT_NAMe = f"<a href='t.me/{chat.username}'>{html.escape(chat.title)}</a>" if chat.username else f"{html.escape(chat.title)}"
+                    creator = None
+
+                    for x in bot.get_chat_administrators(chat.id):
+                        if x.status == "creator":
+                            creator = x.user
+                            break
+
+                    bot.send_message(
+                              JOIN_LOGGER,
+                              "#NEW_GROUP\n\n"
+                              "<b>Chat Name:</b> {} \n\n<b>Chat ID:</b> <code>{}</code> {} \n\n<b>Count:</b> {}\n<b>Adder ID:</b> <code>{}</code> \n<b>Adder Name:</b> {}".
+                              format(CHAT_NAMe, chat.id, '\n\n<b>Creator:</b> <code>' + creator + '</code>' if creator is not None else '', chat.get_members_count(), user.id, mention_html(user.id, html.escape(user.first_name))),
+                              parse_mode=ParseMode.HTML, 
+                              disable_web_page_preview=True,
+                    )
+                except:
+                    pass
                 update.effective_message.reply_text(
-                    "Thanks for adding me! Join @YorkTownEagleUnion for support.",
-                    reply_to_message_id=reply,
+                    "You Have Rented Chizuru For Your Chat. *That's Awesome!*" 
+                    "\nSend [/help](t.me/ElitesOfRobot?start=help) Command In PM To Know About Me More." 
+                    "\nJoin Our Chats For [Discussion](https://t.me/ElitesOfAnime) & [Support](https://t.me/ElitesOfSupport). \n[Click Here](t.me/ElitesOfRobot?start=-1001175341127) To Redirect In PM.", 
+                     parse_mode=ParseMode.MARKDOWN, 
+                     disable_web_page_preview=True,
+                     reply_to_message_id=reply,
                 )
                 continue
 
@@ -274,14 +275,14 @@ def new_member(update: Update, context: CallbackContext):
                     if "%%%" in cust_welcome:
                         split = cust_welcome.split("%%%")
                         if all(split):
-                            text = random.choice(split)
+                            cust_wel = random.choice(split)
                         else:
-                            text = cust_welcome
+                            cust_wel = cust_welcome
                     else:
-                        text = cust_welcome
+                        cust_wel = cust_welcome
 
                     valid_format = escape_invalid_curly_brackets(
-                        text, VALID_WELCOME_FORMATTERS
+                        cust_wel, VALID_WELCOME_FORMATTERS
                     )
                     res = valid_format.format(
                         first=escape_markdown(first_name),
@@ -597,14 +598,6 @@ def left_member(update: Update, context: CallbackContext):
                 )
                 return
 
-            # Give the devs a special goodbye
-            elif left_mem.id in DEV_USERS:
-                update.effective_message.reply_text(
-                    "See you later at the Eagle Union!",
-                    reply_to_message_id=reply,
-                )
-                return
-
             # if media goodbye, use appropriate function for it
             if goodbye_type != sql.Types.TEXT and goodbye_type != sql.Types.BUTTON_TEXT:
                 ENUM_FUNC_MAP[goodbye_type](chat.id, cust_goodbye)
@@ -629,8 +622,17 @@ def left_member(update: Update, context: CallbackContext):
                 else:
                     username = mention
 
+                if "%%%" in cust_goodbye:
+                    split = cust_goodbye.split("%%%")
+                    if all(split):
+                        cust_bye = random.choice(split)
+                    else:
+                        cust_bye = cust_goodbye
+                else:
+                    cust_bye = cust_goodbye
+
                 valid_format = escape_invalid_curly_brackets(
-                    cust_goodbye, VALID_WELCOME_FORMATTERS
+                    cust_bye, VALID_WELCOME_FORMATTERS
                 )
                 res = valid_format.format(
                     first=escape_markdown(first_name),
@@ -1145,31 +1147,6 @@ def user_captcha_button(update: Update, context: CallbackContext):
         query.answer(text="You're not allowed to do this!")
 
 
-WELC_HELP_TXT = (
-    "Your group's welcome/goodbye messages can be personalised in multiple ways. If you want the messages"
-    " to be individually generated, like the default welcome message is, you can use *these* variables:\n"
-    " • `{first}`*:* this represents the user's *first* name\n"
-    " • `{last}`*:* this represents the user's *last* name. Defaults to *first name* if user has no "
-    "last name.\n"
-    " • `{fullname}`*:* this represents the user's *full* name. Defaults to *first name* if user has no "
-    "last name.\n"
-    " • `{username}`*:* this represents the user's *username*. Defaults to a *mention* of the user's "
-    "first name if has no username.\n"
-    " • `{mention}`*:* this simply *mentions* a user - tagging them with their first name.\n"
-    " • `{id}`*:* this represents the user's *id*\n"
-    " • `{count}`*:* this represents the user's *member number*.\n"
-    " • `{chatname}`*:* this represents the *current chat name*.\n"
-    "\nEach variable MUST be surrounded by `{}` to be replaced.\n"
-    "Welcome messages also support markdown, so you can make any elements bold/italic/code/links. "
-    "Buttons are also supported, so you can make your welcomes look awesome with some nice intro "
-    "buttons.\n"
-    f"To create a button linking to your rules, use this: `[Rules](buttonurl://t.me/{dispatcher.bot.username}?start=group_id)`. "
-    "Simply replace `group_id` with your group's id, which can be obtained via /id, and you're good to "
-    "go. Note that group ids are usually preceded by a `-` sign; this is required, so please don't "
-    "remove it.\n"
-    "You can even set images/gifs/videos/voice messages as the welcome message by "
-    "replying to the desired media, and calling `/setwelcome`."
-)
 
 WELC_MUTE_HELP_TXT = (
     "You can get the bot to mute new people who join your group and hence prevent spambots from flooding your group. "
@@ -1180,12 +1157,6 @@ WELC_MUTE_HELP_TXT = (
     "• `/welcomemute off`*:* turns off welcomemute.\n"
     "*Note:* Strong mode kicks a user from the chat if they dont verify in 120seconds. They can always rejoin though"
 )
-
-
-@user_admin
-def welcome_help(update: Update, context: CallbackContext):
-    update.effective_message.reply_text(WELC_HELP_TXT, parse_mode=ParseMode.MARKDOWN)
-
 
 @user_admin
 def welcome_mute_help(update: Update, context: CallbackContext):
@@ -1219,9 +1190,9 @@ def __chat_settings__(chat_id, user_id):
     )
 
 
-from tg_bot.modules.language import gs
 
 def get_help(chat):
+    from tg_bot.modules.language import gs
     return gs(chat, "greetings_help")
 
 NEW_MEM_HANDLER = MessageHandler(
@@ -1257,7 +1228,6 @@ CLEAN_SERVICE_HANDLER = CommandHandler(
 CLEAN_WELCOME = CommandHandler(
     "cleanwelcome", clean_welcome, filters=Filters.chat_type.groups, run_async=True
 )
-WELCOME_HELP = CommandHandler("welcomehelp", welcome_help, run_async=True)
 WELCOME_MUTE_HELP = CommandHandler("welcomemutehelp", welcome_mute_help, run_async=True)
 BUTTON_VERIFY_HANDLER = CallbackQueryHandler(
     user_button, pattern=r"user_join_", run_async=True
@@ -1275,7 +1245,6 @@ dispatcher.add_handler(SET_GOODBYE)
 dispatcher.add_handler(RESET_WELCOME)
 dispatcher.add_handler(RESET_GOODBYE)
 dispatcher.add_handler(CLEAN_WELCOME)
-dispatcher.add_handler(WELCOME_HELP)
 dispatcher.add_handler(WELCOMEMUTE_HANDLER)
 dispatcher.add_handler(CLEAN_SERVICE_HANDLER)
 dispatcher.add_handler(BUTTON_VERIFY_HANDLER)
@@ -1294,7 +1263,6 @@ __handlers__ = [
     RESET_WELCOME,
     RESET_GOODBYE,
     CLEAN_WELCOME,
-    WELCOME_HELP,
     WELCOMEMUTE_HANDLER,
     CLEAN_SERVICE_HANDLER,
     BUTTON_VERIFY_HANDLER,

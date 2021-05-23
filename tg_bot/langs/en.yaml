@@ -22,32 +22,45 @@ pm_help_text: |
         already used this.
    ✧ /help: Sends this message; I'll tell
         you more about myself!
-   ✧ /language: Change bot language.
    ✧ /settings: 
       ∘ in PM: will send you your settings
         for all supported modules.
       ∘ in a GROUP: will redirect you to pm,
         with all that chat's settings.
 
-add_bot_to_group_btn: "Add Kigyo"
+add_bot_to_group_btn: "Add Me"
 support_chat_link_btn: "Support"
 updates_channel_link_btn: "Updates"
 src_btn: "Source code"
 
 admin_help: |
-   • `/admins`*:* list of admins in the chat
+   • /admins*:* list of admins in the chat
 
    *Admins only:*
-   • `/pin`*:* silently pins the message replied to - add `'loud'` or `'notify'` to give notifs to users.
-   • `/unpin`*:* unpins the currently pinned message
-   • `/invitelink`*:* gets invitelink
-   • `/promote`*:* promotes the user replied to
-   • `/demote`*:* demotes the user replied to
-   • `/title <title here>`*:* sets a custom title for an admin that the bot promoted
+   • /pin*:* silently pins the message replied to - add `'loud'` or `'notify'` to give notifs to users.
+   • /unpin*:* unpins the currently pinned message
+   • /invitelink*:* gets invitelink
+   • /fullpromote*:* promotes the user with all administration rights.
+   • /promote*:* promotes the user replied to
+   • /demote*:* demotes the user replied to
+   • /settitle <title here>*:* sets a custom title for an admin that the bot promoted
+   • /setgpic*:* As a reply to file or photo to set group profile pic!
+   • /delgpic*:* Same as above but to remove group profile pic.
+   • /setgtitle <newtitle>*:* Sets new chat title in your group.
+   • /setsticker*:* As a reply to some sticker to set it as group sticker set!
+   • /setdescription or /setdes <description>*:* Sets new chat description in group.
+   • /demons*:* list all the demons (Deleted Accounts) in a chat.
+   • /admincache or /reload*:* Refresh chat admins.
+
+   *Note*: To set group sticker set chat must needs to have min 100 members.
+
+   _Example:_
+   -> `/setdescription Hello, Welcome To My Chat.` (this set group description.)
+
 
 afk_help: |
-   • /afk or /dnd <reason>: mark yourself as AFK(away from keyboard).
-   • brb or dnd <reason>: same as the afk command - but not a command.
+   • /afk <reason>: mark yourself as AFK(away from keyboard).
+   • brb <reason>: same as the afk command - but not a command.
    When marked as AFK, any mentions will be replied to with a message to say you're not available!
 
 anilist_help: |
@@ -62,29 +75,29 @@ antiflood_help: |
     Antiflood allows you to take action on users that send more than x messages in a row. Exceeding the set flood
     will result in restricting that user.
      This will mute users if they send more than 10 messages in a row, bots are ignored.
-     • `/flood`*:* Get the current flood control setting
+     • /flood*:* Get the current flood control setting
     • *Admins only:*
-     • `/setflood <int/'no'/'off'>`*:* enables or disables flood control
-     *Example:* `/setflood 10`
-     • `/setfloodmode <ban/kick/mute/tban/tmute> <value>`*:* Action to perform when user have exceeded flood limit. ban/kick/mute/tmute/tban
+     • /setflood <int/'no'/'off'>*:* enables or disables flood control
+     _Example:_ `/setflood 10`
+     • /setfloodmode <ban/kick/mute/tban/tmute> <value>*:* Action to perform when user have exceeded flood limit. ban/kick/mute/tmute/tban
     • *Note:*
-     • Value must be filled for tban and tmute!!
-     It can be:
-     `5m` = 5 minutes
-     `6h` = 6 hours
-     `3d` = 3 days
-     `1w` = 1 week
+     ∘ _Value must be filled for tban and tmute!!_
+       It can be:
+          `5m` = 5 minutes
+          `6h` = 6 hours
+          `3d` = 3 days
+          `1w` = 1 week
 
 approve_help: |
      Sometimes, you might trust a user not to send unwanted content.
      Maybe not enough to make them admin, but you might be ok with locks, blacklists, and antiflood not applying to them.
      That's what approvals are for - approve of trustworthy users to allow them to send
-     *Admin commands:*
-     • `/approval`*:* Check a user's approval status in current chat.
-     • `/approve`*:* Approve of a user. Locks, blacklists, and antiflood won't apply to them anymore.
-     • `/unapprove`*:* Unapprove of a user. They will now be subject to locks, blacklists, and antiflood again.
-     • `/approved`*:* List all approved users.
-     • `/unapproveall`*:* Unapprove *ALL* users in a chat. This cannot be undone.
+     *Admin commands*:
+     • /approval*:* Check a user's approval status in current chat.
+     • /approve*:* Approve of a user. Locks, blacklists, and antiflood won't apply to them anymore.
+     • /unapprove*:* Unapprove of a user. They will now be subject to locks, blacklists, and antiflood again.
+     • /approved*:* List all approved users.
+     • /unapproveall*:* Unapprove *ALL* users in a chat. This cannot be undone.
 
 backup_help: |
     *Admin only:*
@@ -101,17 +114,32 @@ bans_help: |
     • /unban <userhandle>: unbans a user. (via handle, or reply)
     • /kick <userhandle>: kick a user out of the group, (via handle, or reply)
 
+bl_help: |
+
+   *Trigger*: this blacklists are used to stop certain triggers from being said in a group. Any time the trigger is mentioned, the message will immediately be deleted. A good combo is sometimes to pair this up with warn filters!
+
+   *Sticker*: this blacklists is used to stop certain stickers. Whenever a sticker is sent, the message will be deleted immediately.
+
 blacklist_help: |
-    Blacklists are used to stop certain triggers from being said in a group. Any time the trigger is mentioned, the message will immediately be deleted. A good combo is sometimes to pair this up with warn filters!
+    *CMD*:
+     • /blacklist*:* View the current blacklisted words.
 
-    *NOTE*: Blacklists do not affect group admins.
+    *Admin only*:
+     • /addblacklist <triggers>*:* Add a trigger to the blacklist. Each line is considered one trigger, so using different lines will allow you to add multiple triggers.
+     • /unblacklist <triggers>*:* Remove triggers from the blacklist. Same newline logic applies here, so you can remove multiple triggers at once.
+     • /blacklistmode <off/del/warn/ban/kick/mute/tban/tmute>*:* Action to perform when someone sends blacklisted words.
 
-     • `/blacklist`*:* View the current blacklisted words.
+sblacklist_help: |
+    *CMD*:
+    • /sblacklist: See current blacklisted sticker.
 
-    Admin only:
-     • `/addblacklist <triggers>`*:* Add a trigger to the blacklist. Each line is considered one trigger, so using different lines will allow you to add multiple triggers.
-     • `/unblacklist <triggers>`*:* Remove triggers from the blacklist. Same newline logic applies here, so you can remove multiple triggers at once.
-     • `/blacklistmode <off/del/warn/ban/kick/mute/tban/tmute>`*:* Action to perform when someone sends blacklisted words.
+    *Only admin*:
+    • /addsblacklist <sticker link>: Add the sticker trigger to the black list. Can be added via reply sticker.
+    • /unsblacklist <sticker link>: Remove triggers from blacklist. The same newline logic applies here, so you can delete multiple triggers at once.
+    • /sblacklistmode <ban/tban/mute/tmute>: sets up a default action on what to do if users use blacklisted stickers. (`tmute seems broken right now`)
+
+    *Tip*:
+    • `<sticker link>` can be `https://t.me/addstickers/<sticker>` or just `<sticker>` or reply to the sticker message.
 
 cleaner_help: |
     • /cleanbluetext <on/off/yes/no> - clean commands after sending
@@ -129,20 +157,21 @@ connections_help: |
     • /allowconnect <yes/no>: allow a user to connect to a chat
 
 cust_filters_help: |
-    • `/filters`*:* List all active filters saved in the chat.
+    • /filters*:* List all active filters saved in the chat.
 
-     *Admin only:*
-    • `/filter <keyword> <reply message>`*:* Add a filter to this chat. The bot will now reply that message whenever 'keyword'
+    *Admin only:*
+    • /filter <keyword> <reply message>*:* Add a filter to this chat. The bot will now reply that message whenever 'keyword'
       is mentioned. If you reply to a sticker with a keyword, the bot will reply with that sticker. NOTE: all filter
       keywords are in lowercase. If you want your keyword to be a sentence, use quotes. eg: /filter "hey there" How you
       doin?
-    • `/stop <filter keyword>`*:* Stop that filter.
+    • /stop <filter keyword>*:* Stop that filter.
 
-     *Chat creator only:*
-    • `/removeallfilters`*:* Remove all chat filters at once.
+    *Chat creator only:*
+    • /removeallfilters*:* Remove all chat filters at once.
 
-      *Note*: Filters also support markdown formatters like: {first}, {last} etc.. and buttons.
-        Check `/markdownhelp` to know more!
+    *Tip*: 
+    Filters also support markdown formatters like: {first}, {last} etc.. and buttons.
+    Check /formatting to know more!
 
 disable_help: |
     Not everyone wants every feature that the bot offers. Some commands are best
@@ -157,6 +186,10 @@ disable_help: |
      • /enable <cmd name>: Enable that command
      • /disable <cmd name>: Disable that command
      • /listcmds: List all possible disablable commands
+
+     • /enablemodule <module name>: Enable that module
+     • /disablemodule <module name>: Disable that module
+     • /listmodules: List all possible disablable module
 
 feds_help: |
     Ah, group management. Everything is fun, until the spammer starts entering your group, and you have to block it. Then you need to start banning more, and more, and it hurts.
@@ -186,16 +219,15 @@ feds_help: |
      • /importfbans: Reply to the Federation backup message file to import the banned list to the Federation now. (disabled for now.)
 
 fun_help: |
+     • /truth or /dare: Send random truth or dare.
      • /runs: reply a random string from an array of replies.
-     • /pat: pat a person, cool thing to have for cute ones :3
      • /slap: slap a user, or get slapped if not a reply.
-     • /shrug : get shrug XD.
-     • /table : get flip/unflip :v.
+     • /pat: pat a person, cool thing to have for cute ones :3
+     • /hug: Hug a user warmly, or get hugged if not a reply.
      • /decide : Randomly answers yes/no/maybe
      • /toss : Tosses A coin
-     • /roll : Roll a dice.
-     • /rlg : Join ears,nose,mouth and create an emo ;-;
-     • /shout <keyword>: write anything you want to give loud shout.
+     • /rmeme: Sends random meme scraped from reddit.
+     • /squote: Random Superheroes quotes.
 
 
 sticker_help: |
@@ -213,14 +245,14 @@ sticker_help: |
      Example: `/stickers Chizuru`
 
 antispam_help: |
-     *Admins only:*
-      • `/antispam <on/off/yes/no>`*:* Will toggle our antispam tech or return your current settings.
+     *Admins only*:
+      • /antispam <on/off/yes/no>*:* Will toggle our antispam tech or return your current settings.
 
      Anti-Spam, used by bot devs to ban spammers across all groups. This helps protect
      you and your groups by removing spam flooders as quickly as possible.
-     *Note:* Users can appeal gbans or report spammers at @YorkTownEagleUnion
+     *Note:* Users can appeal gbans or report spammers at @ElitesOfSupport
 
-     Kigyo also integrates @Spamwatch and @Intellivoid's SpamProtectionBot API to remove Spammers as much as possible from your chatroom!
+     Chizuru also integrates @Spamwatch and @Intellivoid's SpamProtectionBot API to remove Spammers as much as possible from your chatroom!
      *What is SpamWatch?*
      SpamWatch maintains a large constantly updated ban-list of spambots, trolls, bitcoin spammers and unsavoury characters.
      Constantly help banning spammers off from your group automatically So, you wont have to worry about spammers storming your group.
@@ -233,12 +265,14 @@ antispam_help: |
 gtranslate_help: |
      Use this module to translate stuff... duh!
      *Commands:*
-     • `/tl` (or `/tr`): as a reply to a message, translates it to English.
-     • `/tl <lang>`: translates to <lang>
+     • /tl (or /tr): as a reply to a message, translates it to English.
+     • /tl <lang>: translates to <lang>
      eg: `/tl ja`: translates to Japanese.
-     • `/tl <source>//<dest>`: translates from <source> to <lang>.
+
+     • /tl <source>//<dest>: translates from <source> to <lang>.
      eg: `/tl ja//en`: translates from Japanese to English.
-     • `/langs`: get a list of supported languages for translation.
+
+     • /langs: get a list of supported languages for translation.
 
 locks_help: |
      Do stickers annoy you? or want to avoid people sharing links? or pictures?
@@ -246,12 +280,12 @@ locks_help: |
      The locks module allows you to lock away some common items in the
      telegram world; the bot will automatically delete them!
 
-      • `/locktypes`*:* Lists all possible locktypes
+      • /locktypes*:* Lists all possible locktypes
 
-     *Admins only:*
-      • `/lock <type>`*:* Lock items of a certain type (not available in private)
-      • `/unlock <type>`*:* Unlock items of a certain type (not available in private)
-      • `/locks`*:* The current list of locks in this chat.
+     *Admins only*:
+      • /lock <type>*:* Lock items of a certain type (not available in private)
+      • /unlock <type>*:* Unlock items of a certain type (not available in private)
+      • /locks*:* The current list of locks in this chat.
 
      Locks can be used to restrict a group's users.
      eg:
@@ -265,14 +299,14 @@ locks_help: |
 
 log_help: |
       *Admins only:*
-      • `/logchannel`*:* get log channel info
-      • `/setlog`*:* set the log channel.
-      • `/unsetlog`*:* unset the log channel.
+      • /logchannel*:* get log channel info
+      • /setlog*:* set the log channel.
+      • /unsetlog*:* unset the log channel.
 
       Setting the log channel is done by:
       • adding the bot to the desired channel (as an admin!)
-      • sending `/setlog` in the channel
-      • forwarding the `/setlog` to the group
+      • sending /setlog in the channel
+      • forwarding the /setlog to the group
 
 markdown_help_text: |
       Markdown is a very powerful formatting tool supported by telegram. Kigyo has some enhancements, to make sure that
@@ -300,121 +334,128 @@ markdown_help_text: |
 misc_help: |
       • /id: get the current group id. If used by replying to a message, gets that user's id.
       • /gifid: reply to a gif to me to tell you its file ID.
-      • /info: get information about a user.
-      • /markdownhelp: quick summary of how markdown works in telegram - can only be called in private chats.
+      • /formatting: quick summary of how formatting works in telegram - can only be called in private chats.
       • /ud <word>: Type the word or expression you want to search use.
-      • /urban <word>: Same as /ud
-      • /paste - Do a paste at `nekobin.com`
-      • /react: Reacts with a random reaction
-      • /weebify <text>: returns a weebified text
-      • /tr (language code) as reply to a long message.
-      • /time <query> : Gives information about a timezone.
-      • /cash : currency converter
-        example syntax: /cash 1 USD INR
-      • /cinfo : get info about a user or a chat (uses @Pyrogram methods)
-      • /getid : get IDs of chat, user and chat message.
-      • /spbinfo : get info about a user from @Intellivoid's SpamProtection API
-      ───────────────────────────────
-      *Last.FM*
-      Share what you're what listening to with the help of this module!
-      *Available commands:*
-      • /setuser <username>: sets your last.fm username.
-      • /clearuser: removes your last.fm username from the bot's database.
-      • /lastfm: returns what you're scrobbling on last.fm.
+      • /paste - Do a paste at `nekobin.com`.
+      • /getpaste - Get the content of a paste or shortened url from `nekobin.com`.
+      • /close: Got a nasty bot keyboard stuck in your group?
+      • /app <app name>: Finds an app in playstore for you.
 
 muting_help: |
-      *Admins only:*
-       • `/mute <userhandle>`*:* silences a user. Can also be used as a reply, muting the replied to user.
-       • `/tmute <userhandle> x(m/h/d)`*:* mutes a user for x time. (via handle, or reply). `m` = `minutes`, `h` = `hours`, `d` = `days`.
-       • `/unmute <userhandle>`*:* unmutes a user. Can also be used as a reply, muting the replied to user.
+      *Admins only*:
+       • /mute <userhandle>*:* silences a user. Can also be used as a reply, muting the replied to user.
+       • /tmute <userhandle> x(m/h/d)*:* mutes a user for x time. (via handle, or reply). `m` = `minutes`, `h` = `hours`, `d` = `days`.
+       • /unmute <userhandle>*:* unmutes a user. Can also be used as a reply, muting the replied to user.
 
 notes_help: |
-       • `/get <notename>`*:* get the note with this notename
+       • /get <notename>*:* get the note with this notename
        • `#<notename>`*:* same as /get
-       • `/notes` or `/saved`*:* list all saved notes in this chat
-       • `/number` *:* Will pull the note of that number in the list.
+       • /notes or /saved*:* list all saved notes in this chat
+       • /number *:* Will pull the note of that number in the list.
         If you would like to retrieve the contents of a note without any formatting, use `/get <notename> noformat`. This can
         be useful when updating a current note.
 
         *Admins only:*
-       • `/save <notename> <notedata>`*:* saves notedata as a note with name notename
+       • /save <notename> <notedata>*:* saves notedata as a note with name notename
         A button can be added to a note by using standard markdown link syntax - the link should just be prepended with a
          `buttonurl:` section, as such: `[somelink](buttonurl:example.com)`. Check `/markdownhelp` for more info.
-       • `/save <notename>`*:* save the replied message as a note with name notename
-       • `/clear <notename>`*:* clear note with this name
-       • `/removeallnotes`*:* removes all notes from the group
+       • /save <notename>*:* save the replied message as a note with name notename
+       • /clear <notename>*:* clear note with this name
+       • /removeallnotes*:* removes all notes from the group
        *Note:* Note names are case-insensitive, and they are automatically converted to lowercase before getting saved.
 
 purge_help: |
-       *Admin only:*
+       *Admin only*:
         • /del: deletes the message you replied to
         • /purge: deletes all messages between this and the replied to message.
-        • /purge <integer X>: deletes the replied message, and X messages following it if replied to a message.
 
 reports_help: |
-        • `/report <reason>`*:* reply to a message to report it to admins.
-        • `@admin`*:* reply to a message to report it to admins.
+        • /report <reason>*:* reply to a message to report it to admins.
+        • @admin*:* reply to a message to report it to admins.
          *NOTE:* Neither of these will get triggered if used by admins.
 
          *Admins only:*
-          • `/reports <on/off>`*:* change report setting, or view current status.
+          • /reports <on/off>*:* change report setting, or view current status.
           • If done in pm, toggles your status.
           • If in group, toggles that groups's status.
 
 rules_help: |
-      • `/rules`*:* get the rules for this chat.
-       *Admins only:*
-      • `/setrules <your rules here>`*:* set the rules for this chat.
-      • `/clearrules`*:* clear the rules for this chat.
+      • /rules*:* get the rules for this chat.
+       *Admins only*:
+      • /setrules <your rules here>*:* set the rules for this chat.
+      • /clearrules*:* clear the rules for this chat.
 
 tagger_help: |
    Tagger is an essential feature to mention all subscribed members in the group. Any chat members can subscribe to tagger.
-   • `/tagme`*:* registers to the chat tag list.
-   • `/untagme`*:* unsubscribes from the chat tag list.
-   Admin only:
-   • `/tag <userhandle>`*:* add a user to chat tag list. (via handle, or reply)
-   • `/untag <userhandle>`*:* remove a user to chat tag list. (via handle, or reply)
-   • `/tagall`*:* mention all subscribed members.
-   • `/untagall`*:* clears all subscribed members.
+   • /tagme*:* registers to the chat tag list.
+   • /untagme*:* unsubscribes from the chat tag list.
+   *Admin only*:
+   • /tag <userhandle>*:* add a user to chat tag list. (via handle, or reply)
+   • /untag <userhandle>*:* remove a user to chat tag list. (via handle, or reply)
+   • /tagall*:* mention all subscribed members.
+   • /untagall*:* clears all subscribed members.
+
+chatbot_help: |
+    Chatbot utilizes the [Branshop](brainshop.ai)'s API and provides a more interactive group chatting experience.
+    *Admins only*:
+    • /chatbot <on-yes / off-no>: Enables/Disables Chatbot mode in the group.
 
 userinfo_help: |
-      • /setbio <text>: while replying, will save another user's bio
-      • /bio: will get your or another user's bio. This cannot be set by yourself.
+      *Self addded information*:
       • /setme <text>: will set your info
       • /me: will get your or another user's info
+      _Examples:_
+      -> ```/setme I am a chizuru.```
+      -> ```/me @username``` (defaults to yours if no user specified)
+
+      ────────────────────────
+
+      *Information others add on you*:
+      • /setbio <text>: while replying, will save another user's bio
+      • /bio: will get your or another user's bio. This cannot be set by yourself.
+      _Examples:_
+      -> ```/bio @username ``` (defaults to yours if not specified).
+      -> ```/setbio This user is a good.``` (reply to the user)
+
+      ────────────────────────
+
+      *Overall Information about any user*:
+      • /info: get information about a user.
 
 warns_help: |
-      • `/warns <userhandle>`*:* get a user's number, and reason, of warns.
-      • `/warnlist`*:* list of all current warning filters
+      • /warns <userhandle>*:* get a user's number, and reason, of warns.
+      • /warnlist*:* list of all current warning filters
 
       *Admins only:*
-      • `/warn <userhandle>`*:* warn a user. After 3 warns, the user will be banned from the group. Can also be used as a reply.
-      • `/resetwarn <userhandle>`*:* reset the warns for a user. Can also be used as a reply.
-      • `/addwarn <keyword> <reply message>`*:* set a warning filter on a certain keyword. If you want your keyword to
+      • /warn <userhandle>*:* warn a user. After 3 warns, the user will be banned from the group. Can also be used as a reply.
+      • /resetwarn <userhandle>*:* reset the warns for a user. Can also be used as a reply.
+      • /addwarn <keyword> <reply message>*:* set a warning filter on a certain keyword. If you want your keyword to
       be a sentence, encompass it with quotes, as such: `/addwarn "very angry" This is an angry user`.
-      • `/nowarn <keyword>`*:* stop a warning filter
-      • `/warnlimit <num>`*:* set the warning limit
-      • `/strongwarn <on/yes/off/no>`*:* If set to on, exceeding the warn limit will result in a ban. Else, will just kick.
+      • /nowarn <keyword>*:* stop a warning filter
+      • /warnlimit <num>*:* set the warning limit
+      • /strongwarn <on/yes/off/no>*:* If set to on, exceeding the warn limit will result in a ban. Else, will just kick.
 
 greetings_help: |
 
-      *Admins only:*
-       • `/welcome <on/off>`*:* enable/disable welcome messages.
-       • `/welcome`*:* shows current welcome settings.
-       • `/welcome noformat`*:* shows current welcome settings, without the formatting - useful to recycle your welcome messages!
-       • `/goodbye`*:* same usage and args as `/welcome`.
-       • `/setwelcome <sometext>`*:* set a custom welcome message. If used replying to media, uses that media.
-       • `/setgoodbye <sometext>`*:* set a custom goodbye message. If used replying to media, uses that media.
-       • `/resetwelcome`*:* reset to the default welcome message.
-       • `/resetgoodbye`*:* reset to the default goodbye message.
-       • `/cleanwelcome <on/off>`*:* On new member, try to delete the previous welcome message to avoid spamming the chat.
-       • `/welcomemutehelp`*:* gives information about welcome mutes.
-       • `/cleanservice <on/off`*:* deletes telegrams welcome/left service messages.
-       *Example:*
-      user joined chat, user left chat.
+      *Welcome*:
+       • /welcome <on/off>*:* enable/disable welcome messages.
+       • /welcome*:* shows current welcome settings.
+       • /welcome noformat*:* shows current welcome settings, without the formatting - useful to recycle your welcome messages!
+       • /setwelcome <sometext>*:* set a custom welcome message. If used replying to media, uses that media.
+       • /resetwelcome*:* reset to the default welcome message.
 
-      *Welcome markdown:*
-       • `/welcomehelp`*:* view more formatting information for custom welcome/goodbye messages.
+       *Goodbye*:
+       • /goodbye <on/off>*:* enable/disable goodbye messages.
+       • /goodbye*:* shows current goodbye settings.
+       • /setgoodbye <sometext>*:* set a custom goodbye message. If used replying to media, uses that media.
+       • /resetgoodbye*:* reset to the default goodbye message.
+
+       *Other*:
+       • /welcomemutehelp*:* gives information about welcome mutes.
+       • /cleanwelcome <on/off>*:* On new member, try to delete the previous welcome message to avoid spamming the chat.
+       • /cleanservice <on/off*:* deletes telegrams welcome/left service messages.
+       _Example:_
+       user joined chat, user left chat.
 
 greetings_format_help: |
     *Formatting:*
@@ -445,8 +486,8 @@ greetings_random_help: |
     *How to use random contents:*
     • %%%: This separator can be used to add "random" replies to the bot.
 
-    *For example:*
-    ```hello
+    _For example:_
+    -> ```hello
     %%%
     how are you```
     This will randomly choose between sending the first message, "hello", or the second message, "how are you". Use this to make Chizuru feel a bit more customised! (only works in notes/filters/greetings).
